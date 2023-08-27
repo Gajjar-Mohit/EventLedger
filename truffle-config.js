@@ -6,7 +6,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           process.env.MNEMONIC,
-          `https://rpc-mumbai.maticvigil.com/v1/e7683e02c1cfd4b9c2f5c6b20bd61a7328f952a6`
+          `https://rpc-mumbai.maticvigil.com`
         ),
       network_id: 80001,
       confirmations: 2,
