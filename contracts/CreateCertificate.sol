@@ -27,7 +27,7 @@ contract CreateCertificate {
         public
         view
         returns (
-            string memory eventName,
+            string memory eventName,    
             address eventOwner,
             string memory date,
             Certificate[] memory certificates

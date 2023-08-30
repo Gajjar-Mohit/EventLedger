@@ -1,4 +1,12 @@
+import 'dart:math';
+
+import 'package:client/pages/issuer/home.dart';
+import 'package:client/providers/wallet_provider.dart';
+import 'package:client/services/contract_service.dart';
+import 'package:client/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
@@ -20,6 +28,54 @@ class _OnboardingState extends State<Onboarding> {
     super.dispose();
   }
 
+  WalletProvider walletProvider = WalletProvider();
+  ContractService contractService = ContractService();
+  void createWallet() async {
+    walletProvider.createWallet();
+    print("------------");
+    await walletProvider.getBalance().then((value) {
+      setState(() {
+        walletCard = true;
+        balance = value.toString();
+        etherAddress = walletProvider.ethereumAddress.toString();
+      });
+    });
+  }
+
+  void checkBalance() async {
+    await walletProvider.getBalance().then((value) {
+      setState(() {
+        balance = value.toString();
+        print(value);
+      });
+    });
+  }
+
+  Uri url = Uri.parse("https://faucet.polygon.technology/");
+  Future<void> _launchUrl() async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  void generateEvent() {
+    if (balance != "0") {
+      contractService
+          .registerEventFunction(nameController.text, dateController.text)
+          .then((value) => Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const IssuerHome())));
+    } else {
+      Fluttertoast.showToast(
+          msg: "Please get some test Matic before proceeding");
+    }
+  }
+
+  TextEditingController nameController = TextEditingController();
+  TextEditingController dateController = TextEditingController();
+  TextEditingController privateKeyController = TextEditingController();
+  bool registateState = true;
+  bool walletCard = false;
+  String balance = "", etherAddress = "";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,8 +115,7 @@ class _OnboardingState extends State<Onboarding> {
                         ),
                         alignment: const AlignmentDirectional(-1, 0),
                         child: const Padding(
-                          padding:
-                              EdgeInsetsDirectional.fromSTEB(32, 0, 0, 0),
+                          padding: EdgeInsetsDirectional.fromSTEB(32, 0, 0, 0),
                           child: Text(
                             'Event Ledger',
                             style: TextStyle(
@@ -77,201 +132,48 @@ class _OnboardingState extends State<Onboarding> {
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               32, 32, 32, 32),
                           child: Column(
-                            mainAxisSize: MainAxisSize.max,
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Create an Event',
-                                style: TextStyle(
-                                  color: Color(0xFF101213),
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    0, 12, 0, 24),
-                                child: Text(
-                                  'Let\'s get started by filling out the details below.',
-                                  style: TextStyle(
-                                    color: Color(0xFF57636C),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 0, 0, 16),
-                                child: SizedBox(
-                                  width: 370,
-                                  child: TextFormField(
-                                      controller: TextEditingController(),
-                                      autofocus: true,
-                                      obscureText: false,
-                                      decoration: InputDecoration(
-                                        labelText: 'Event Name',
-                                        labelStyle: const TextStyle(
-                                          color: Color(0xFF57636C),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
+                              walletCard
+                                  ? WalletCard(
+                                      getMaticTap: _launchUrl,
+                                      balance: balance,
+                                      confirmTap: generateEvent,
+                                      checkBalanceTap: checkBalance,
+                                      etherAdd: etherAddress,
+                                    )
+                                  : registateState
+                                      ? CreateEvent(
+                                          submit: () {
+                                            if (nameController
+                                                    .text.isNotEmpty &&
+                                                dateController.text.isNotEmpty) {
+                                              createWallet();
+                                            } else {
+                                              Fluttertoast.showToast(
+                                                  msg:
+                                                      "Please enter details before proceeding.");
+                                            }
+                                          },
+                                          dateController: dateController,
+                                          nameController: nameController,
+                                          getAccessTap: () {
+                                            setState(() {
+                                              registateState = !registateState;
+                                            });
+                                          },
+                                        )
+                                      : AccessEvent(
+                                          submit: () {},
+                                          privateKeyController:
+                                              privateKeyController,
+                                          createAccountTap: () {
+                                            setState(() {
+                                              registateState = !registateState;
+                                            });
+                                          },
                                         ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFF1F4F8),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFF4B39EF),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        errorBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        focusedErrorBorder:
-                                            OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        filled: true,
-                                        fillColor: const Color(0xFFF1F4F8),
-                                      ),
-                                      style: const TextStyle(
-                                        color: Color(0xFF101213),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      keyboardType:
-                                          TextInputType.emailAddress,
-                                      validator: (val) {
-                                        return null;
-                                      }),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 0, 0, 16),
-                                child: SizedBox(
-                                  width: 370,
-                                  child: TextFormField(
-                                      controller: TextEditingController(),
-                                      autofocus: true,
-                                      decoration: InputDecoration(
-                                        hintText: "DD/MM/YYYY",
-                                        labelText: 'Event Date',
-                                        labelStyle: const TextStyle(
-                                          color: Color(0xFF57636C),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFF1F4F8),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFF4B39EF),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        errorBorder: OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        focusedErrorBorder:
-                                            OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFFF5963),
-                                            width: 2,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        filled: true,
-                                        fillColor: const Color(0xFFF1F4F8),
-                                      ),
-                                      style: const TextStyle(
-                                        color: Color(0xFF101213),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      validator: (val) {
-                                        return null;
-                                      }),
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () {},
-                                child: Container(
-                                  width: 370,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFF4B39EF),
-                                      borderRadius:
-                                          BorderRadius.circular(12)),
-                                  child: const Center(
-                                    child: Text(
-                                      "Create",
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    0, 12, 0, 12),
-                                child: RichText(
-                                  text: const TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'Already created event? ',
-                                        style: TextStyle(),
-                                      ),
-                                      TextSpan(
-                                        text: 'get access',
-                                        style: TextStyle(
-                                          color: Color(0xFF4B39EF),
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      )
-                                    ],
-                                    style: TextStyle(
-                                      color: Color(0xFF57636C),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
