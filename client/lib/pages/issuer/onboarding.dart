@@ -7,6 +7,7 @@ import 'package:client/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/web3dart.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
@@ -67,6 +68,18 @@ class _OnboardingState extends State<Onboarding> {
     } else {
       Fluttertoast.showToast(
           msg: "Please get some test Matic before proceeding");
+    }
+  }
+
+  void checkValidation() {
+
+    if (walletProvider.initializeFromKey(privateKeyController.text)) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const IssuerHome()));
+      });
+    } else {
+      Fluttertoast.showToast(msg: "Invalid key or no account found");
     }
   }
 
@@ -148,7 +161,8 @@ class _OnboardingState extends State<Onboarding> {
                                           submit: () {
                                             if (nameController
                                                     .text.isNotEmpty &&
-                                                dateController.text.isNotEmpty) {
+                                                dateController
+                                                    .text.isNotEmpty) {
                                               createWallet();
                                             } else {
                                               Fluttertoast.showToast(
@@ -165,7 +179,7 @@ class _OnboardingState extends State<Onboarding> {
                                           },
                                         )
                                       : AccessEvent(
-                                          submit: () {},
+                                          submit: checkValidation,
                                           privateKeyController:
                                               privateKeyController,
                                           createAccountTap: () {
