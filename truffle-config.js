@@ -6,7 +6,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           process.env.MNEMONIC,
-          `https://rpc-mumbai.maticvigil.com`
+          `https://polygon-mumbai.g.alchemy.com/v2/_545cXZb3whqPZ9eLyvHxT1h771CJGx1`
         ),
       network_id: 80001,
       confirmations: 2,
@@ -30,3 +30,4 @@ module.exports = {
     },
   },
 };
+0xa096247d987a688f2825c70009aa5261df06197e;

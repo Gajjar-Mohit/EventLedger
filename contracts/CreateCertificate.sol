@@ -6,6 +6,8 @@ contract CreateCertificate {
         string participentName;
         string cid;
         string wonPriceFor;
+        string eventName;
+        string eventDate;
     }
     struct Event {
         string eventName;
@@ -27,7 +29,7 @@ contract CreateCertificate {
         public
         view
         returns (
-            string memory eventName,    
+            string memory eventName,
             address eventOwner,
             string memory date,
             Certificate[] memory certificates
@@ -42,14 +44,23 @@ contract CreateCertificate {
         );
     }
 
+    function getEvent(
+        address eventAddress
+    ) public view returns (string memory eventName, string memory eventDate) {
+        Event storage event_ = events[eventAddress];
+        return (event_.eventName, event_.date);
+    }
+
     function generateCertificate(
         string memory participentName,
         string memory cid,
-        string memory wonPriceFor
+        string memory wonPriceFor,
+        string memory eventName,
+        string memory eventDate
     ) public returns (bool) {
         Event storage event_ = events[msg.sender];
         event_.certificates.push(
-            Certificate(participentName, cid, wonPriceFor)
+            Certificate(participentName, cid, wonPriceFor, eventName, eventDate)
         );
         return true;
     }

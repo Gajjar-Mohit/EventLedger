@@ -1,13 +1,16 @@
-import 'dart:math';
+// ignore: avoid_web_libraries_in_flutter, library_prefixes
+import 'dart:html' as webFile;
 
 import 'package:client/pages/issuer/home.dart';
 import 'package:client/providers/wallet_provider.dart';
 import 'package:client/services/contract_service.dart';
 import 'package:client/widgets/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web3dart/web3dart.dart';
+
+import '../../services/wallet_service.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
@@ -33,7 +36,7 @@ class _OnboardingState extends State<Onboarding> {
   ContractService contractService = ContractService();
   void createWallet() async {
     walletProvider.createWallet();
-    print("------------");
+
     await walletProvider.getBalance().then((value) {
       setState(() {
         walletCard = true;
@@ -41,13 +44,26 @@ class _OnboardingState extends State<Onboarding> {
         etherAddress = walletProvider.ethereumAddress.toString();
       });
     });
+    WalletService().getPrivateKey().then((value1) {
+      if (value1.isNotEmpty) {
+        if (kIsWeb) {
+          var blob = webFile.Blob([value1], 'text/plain', 'native');
+
+          webFile.AnchorElement(
+            href: webFile.Url.createObjectUrlFromBlob(blob).toString(),
+          )
+            ..setAttribute("download", "privatekey.txt")
+            ..click();
+          Fluttertoast.showToast(msg: "Private key has been downloaded.");
+        }
+      }
+    });
   }
 
   void checkBalance() async {
     await walletProvider.getBalance().then((value) {
       setState(() {
         balance = value.toString();
-        print(value);
       });
     });
   }
@@ -60,11 +76,14 @@ class _OnboardingState extends State<Onboarding> {
   }
 
   void generateEvent() {
+    print("Generate Event Function");
     if (balance != "0") {
-      contractService
+      ContractService()
           .registerEventFunction(nameController.text, dateController.text)
-          .then((value) => Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const IssuerHome())));
+          .then((_) {
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const IssuerHome()));
+      });
     } else {
       Fluttertoast.showToast(
           msg: "Please get some test Matic before proceeding");
@@ -72,7 +91,6 @@ class _OnboardingState extends State<Onboarding> {
   }
 
   void checkValidation() {
-
     if (walletProvider.initializeFromKey(privateKeyController.text)) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         Navigator.pushReplacement(context,
