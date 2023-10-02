@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:client/configs/keys.dart';
 import 'package:client/services/wallet_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
-class ContractService {
+class ContractService extends ChangeNotifier {
   String? _privateKey;
 
   final Web3Client _web3client = Web3Client(rpcUrl, Client());
@@ -36,6 +37,7 @@ class ContractService {
     _privateKey = await walletService.getPrivateKey();
     print("------------------");
     print(_privateKey);
+    notifyListeners();
   }
 
   Future getAbi() async {
@@ -47,13 +49,18 @@ class ContractService {
     _abiCode = jsonEncode(jsonAbi['abi']);
 
     _contractAddress =
-        EthereumAddress.fromHex(jsonAbi['networks']['80001']['address']);
+        EthereumAddress.fromHex(jsonAbi['networks']['5777']['address']);
     print("Got the abi");
+    notifyListeners();
   }
 
   void getCredentials() {
+    print(_privateKey);
+    print("-----------------------------------");
     _credentials = EthPrivateKey.fromHex(_privateKey!);
+    print(_credentials!.address.toString());
     print("got the creds");
+    notifyListeners();
   }
 
   void getDeployedContract() {
@@ -68,30 +75,35 @@ class ContractService {
     getEvent = _deployedContract!.function("getEvent");
 
     print("Got the contract");
+    notifyListeners();
   }
 
-  Future registerEventFunction(String eventName, String eventDate) async {
+  Future registerEventFunction(
+      String eventName, String eventDate, EthereumAddress add) async {
     print("Inside event generation function");
     await _web3client.sendTransaction(
         _credentials!,
         Transaction.callContract(
             contract: _deployedContract!,
             function: registerEvent!,
-            parameters: [eventName, eventDate]),
+            parameters: [eventName, eventDate, add]),
         chainId: chainId);
 
     print("Event generated");
+    notifyListeners();
   }
 
-  Future generateCertificateFunction(
-      String participentName, String certificateId, String priceWonFor) async {
+  Future generateCertificateFunction(String certificateId) async {
     var certificateGenerated = await _web3client.sendTransaction(
         _credentials!,
         Transaction.callContract(
             contract: _deployedContract!,
             function: generateCertificate!,
-            parameters: [participentName, certificateId, priceWonFor]),
+            parameters: [
+              certificateId,
+            ]),
         chainId: chainId);
+    notifyListeners();
     return certificateGenerated;
   }
 
@@ -104,7 +116,7 @@ class ContractService {
             function: verifyCertificate!,
             parameters: [eventAddress, certificateId]),
         chainId: chainId);
-
+    notifyListeners();
     return certificate;
   }
 
@@ -114,6 +126,7 @@ class ContractService {
       function: getEvent!,
       params: [ethereumAddress],
     );
+    notifyListeners();
     return event;
   }
 
@@ -123,7 +136,7 @@ class ContractService {
       function: getAllEvent!,
       params: [],
     );
-
+    notifyListeners();
     return events;
   }
 }

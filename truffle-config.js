@@ -15,6 +15,11 @@ module.exports = {
       gas: 6000000,
       gasPrice: 10000000000,
     },
+    development: {
+      host: "0.0.0.0",
+      port: 7545,
+      network_id: "5777",
+    },
     advanced: {
       websockets: true,
     },

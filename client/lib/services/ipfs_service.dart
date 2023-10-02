@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../configs/keys.dart';
+
 class IpfsService extends ChangeNotifier {
   Future<String> uploadImage(String imgPath) async {
     try {

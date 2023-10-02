@@ -13,16 +13,19 @@ contract CreateCertificate {
         string eventName;
         address eventOwner;
         string date;
-        Certificate[] certificates;
+        string[] certificates;
     }
 
     mapping(address => Event) events;
 
-    function registerEvent(string memory eventName, string memory date) public {
-        Event storage event_ = events[msg.sender];
-        event_.date = date;
-        event_.eventName = eventName;
-        event_.eventOwner = msg.sender;
+    function registerEvent(
+        string memory eventName,
+        string memory date,
+        address eventAdd
+    ) public {
+        events[eventAdd].eventName = eventName;
+        events[eventAdd].date = date;
+        events[eventAdd].eventOwner = eventAdd;
     }
 
     function getAllEvents()
@@ -32,7 +35,7 @@ contract CreateCertificate {
             string memory eventName,
             address eventOwner,
             string memory date,
-            Certificate[] memory certificates
+            string[] memory certificates
         )
     {
         Event storage event_ = events[msg.sender];
@@ -51,51 +54,26 @@ contract CreateCertificate {
         return (event_.eventName, event_.date);
     }
 
-    function generateCertificate(
-        string memory participentName,
-        string memory cid,
-        string memory wonPriceFor,
-        string memory eventName,
-        string memory eventDate
-    ) public returns (bool) {
+    function generateCertificate(string memory cid) public returns (bool) {
         Event storage event_ = events[msg.sender];
-        event_.certificates.push(
-            Certificate(participentName, cid, wonPriceFor, eventName, eventDate)
-        );
+        event_.certificates.push(cid);
         return true;
     }
 
     function verifyCertificate(
         address eventAddress,
         string memory cid
-    )
-        public
-        view
-        returns (
-            string memory participentName,
-            string memory cid_,
-            string memory wonPriceFor,
-            string memory eventName,
-            string memory eventDate
-        )
-    {
+    ) public view returns (string memory cid_) {
         Event storage event_ = events[eventAddress];
-        Certificate[] storage certificates = event_.certificates;
 
-        for (uint i = 0; i < certificates.length; i++) {
-            if (
-                keccak256(bytes(certificates[i].cid)) == keccak256(bytes(cid))
-            ) {
-                return (
-                    certificates[i].participentName,
-                    certificates[i].cid,
-                    certificates[i].wonPriceFor,
-                    event_.eventName,
-                    event_.date
-                );
+        string[] storage cids = event_.certificates;
+
+        for (uint i = 0; i < cids.length; i++) {
+            if (keccak256(bytes(cids[i])) == keccak256(bytes(cid))) {
+                return (cids[i]);
             }
         }
 
-        return ("", "", "", "", "");
+        return ("");
     }
 }

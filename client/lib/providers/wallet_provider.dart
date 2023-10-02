@@ -6,7 +6,7 @@ import 'package:web3dart/web3dart.dart';
 
 import '../services/wallet_service.dart';
 
-class WalletProvider {
+class WalletProvider extends ChangeNotifier {
   final WalletService _walletService = WalletService();
   final Web3Client _web3client = Web3Client(rpcUrl, Client());
 
@@ -27,6 +27,8 @@ class WalletProvider {
     credentials = await _walletService.initializeWalletAgain();
     ethereumAddress = credentials!.address;
     getBalance();
+
+    notifyListeners();
   }
 
   initializeFromKey(String privateKey) {
@@ -35,7 +37,7 @@ class WalletProvider {
       ethereumAddress = credentials!.address;
       _walletService.setPrivateKey(privateKey);
       getBalance();
-
+      notifyListeners();
       return true;
     } on FormatException catch (e) {
       debugPrint('Error: ${e.message}');
@@ -43,6 +45,7 @@ class WalletProvider {
       debugPrint('Error: $e');
     }
 
+    notifyListeners();
     return false;
   }
 
@@ -50,5 +53,6 @@ class WalletProvider {
     credentials = _walletService.generateRandomAccount();
     ethereumAddress = credentials!.address;
     getBalance();
+    notifyListeners();
   }
 }

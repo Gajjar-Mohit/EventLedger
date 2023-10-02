@@ -1,7 +1,10 @@
 import 'package:client/pages/issuer/home.dart';
 import 'package:client/pages/issuer/onboarding.dart';
+import 'package:client/providers/wallet_provider.dart';
+import 'package:client/services/contract_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import 'services/wallet_service.dart';
 
@@ -36,14 +39,22 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Event Ledger',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          textTheme: GoogleFonts.poppinsTextTheme(),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: isLoggedIn ? const IssuerHome() : const Onboarding());
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<WalletService>(create: (_) => WalletService()),
+        ChangeNotifierProvider<WalletProvider>(create: (_) => WalletProvider()),
+        ChangeNotifierProvider<ContractService>(
+            create: (_) => ContractService()),
+      ],
+      child: MaterialApp(
+          title: 'Event Ledger',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            textTheme: GoogleFonts.poppinsTextTheme(),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          home: isLoggedIn ? const IssuerHome() : const Onboarding()),
+    );
   }
 }

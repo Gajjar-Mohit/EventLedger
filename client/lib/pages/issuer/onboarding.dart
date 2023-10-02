@@ -8,7 +8,9 @@ import 'package:client/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/web3dart.dart';
 
 import '../../services/wallet_service.dart';
 
@@ -32,9 +34,11 @@ class _OnboardingState extends State<Onboarding> {
     super.dispose();
   }
 
-  WalletProvider walletProvider = WalletProvider();
-  ContractService contractService = ContractService();
+  // WalletProvider walletProvider = WalletProvider();
+  // ContractService contractService = ContractService();
   void createWallet() async {
+    WalletProvider walletProvider =
+        Provider.of<WalletProvider>(context, listen: false);
     walletProvider.createWallet();
 
     await walletProvider.getBalance().then((value) {
@@ -61,6 +65,8 @@ class _OnboardingState extends State<Onboarding> {
   }
 
   void checkBalance() async {
+    WalletProvider walletProvider =
+        Provider.of<WalletProvider>(context, listen: false);
     await walletProvider.getBalance().then((value) {
       setState(() {
         balance = value.toString();
@@ -75,14 +81,20 @@ class _OnboardingState extends State<Onboarding> {
     }
   }
 
-  void generateEvent() {
+  Future<void> generateEvent() async {
+    ContractService contactService =
+        Provider.of<ContractService>(context, listen: false);
+    print(EthereumAddress.fromHex(etherAddress));
     print("Generate Event Function");
     if (balance != "0") {
-      ContractService()
-          .registerEventFunction(nameController.text, dateController.text)
-          .then((_) {
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const IssuerHome()));
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        contactService
+            .registerEventFunction(nameController.text, dateController.text,
+                EthereumAddress.fromHex(etherAddress))
+            .then((_) {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const IssuerHome()));
+        });
       });
     } else {
       Fluttertoast.showToast(
@@ -91,6 +103,8 @@ class _OnboardingState extends State<Onboarding> {
   }
 
   void checkValidation() {
+    WalletProvider walletProvider =
+        Provider.of<WalletProvider>(context, listen: false);
     if (walletProvider.initializeFromKey(privateKeyController.text)) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         Navigator.pushReplacement(context,
