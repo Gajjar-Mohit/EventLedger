@@ -49,7 +49,7 @@ class ContractService extends ChangeNotifier {
     _abiCode = jsonEncode(jsonAbi['abi']);
 
     _contractAddress =
-        EthereumAddress.fromHex(jsonAbi['networks']['5777']['address']);
+        EthereumAddress.fromHex(jsonAbi['networks']['80001']['address']);
     print("Got the abi");
     notifyListeners();
   }

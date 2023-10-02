@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:client/pages/issuer/onboarding.dart';
+import 'package:client/providers/wallet_provider.dart';
 import 'package:client/services/contract_service.dart';
 import 'package:client/services/ipfs_service.dart';
 import 'package:client/services/wallet_service.dart';
@@ -23,8 +24,17 @@ class _IssuerHomeState extends State<IssuerHome> {
   void logout() {
     walletService.removePrivateKey().then((value) => Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const Onboarding())));
-    // contractService
-    //     .registerEventFunction("Spoural 2023", "21/JAN/2023")
+    // ContractService contactService =
+    //     Provider.of<ContractService>(context, listen: false);
+    // WalletProvider wallet = Provider.of<WalletProvider>(context, listen: false);
+    // wallet.getBalance();
+    // print(wallet.accountBalance);
+    // contactService
+    //     .registerEventFunction(
+    //         "Spoural 2023",
+    //         "21/JAN/2023",
+    //         EthereumAddress.fromHex(
+    //             '0x1cf847fefd7858e8e4d226f234dfd4fcdeb98c3d'))
     //     .then((value) {
     //   print("Registered");
     // });
