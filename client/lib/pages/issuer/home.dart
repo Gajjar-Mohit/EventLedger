@@ -1,9 +1,10 @@
 import 'dart:async';
-
 import 'package:client/pages/issuer/onboarding.dart';
 import 'package:client/services/contract_service.dart';
 import 'package:client/services/ipfs_service.dart';
 import 'package:client/services/wallet_service.dart';
+import 'package:excel/excel.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -24,20 +25,6 @@ class _IssuerHomeState extends State<IssuerHome> {
   void logout() {
     walletService.removePrivateKey().then((value) => Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const Onboarding())));
-    // ContractService contactService =
-    //     Provider.of<ContractService>(context, listen: false);
-    // WalletProvider wallet = Provider.of<WalletProvider>(context, listen: false);
-    // wallet.getBalance();
-    // print(wallet.accountBalance);
-    // contactService
-    //     .registerEventFunction(
-    //         "Hack This Fall",
-    //         "21/JAN/2023",
-    //         EthereumAddress.fromHex(
-    //             '0xab3561c8a866e5c05a3efe14a2958c16c5a5f76b'))
-    //     .then((value) {
-    //   print("Registered");
-    // });
   }
 
   String name = "Enter the name";
@@ -112,21 +99,27 @@ class _IssuerHomeState extends State<IssuerHome> {
 
   IpfsService ipfsService = IpfsService();
   void captureCertificatePNG() {
-
     ContractService contactService =
         Provider.of<ContractService>(context, listen: false);
     screenshotController.capture().then((image) {
       ipfsService.uploadImageWeb(image!).then((cid) {
         contactService.generateCertificateFunction(cid).then((value) {
+          String link = "";
           setState(() {
             isLoading = false;
+            link = "https://ipfs.io/ipfs/$cid";
           });
+          writeData(name, prize, link);
           Fluttertoast.showToast(msg: "Certificate Uploaded");
+          prize = "Enter the prize ";
+          name = "Enter the name";
+          _prizeFieldContoller.clear();
+          _nameFieldContoller.clear();
         });
       });
     }).catchError((onError) {
       print(onError);
-    
+
       // Fluttertoast.showToast(msg: onError);
     });
   }
@@ -135,6 +128,27 @@ class _IssuerHomeState extends State<IssuerHome> {
   void initState() {
     getEventDetails();
     super.initState();
+  }
+
+  var excel = Excel.createExcel();
+  FilePickerResult? pickedFile;
+  void downloadExcel() async {
+    excel.save();
+  }
+
+  void writeData(String name, String prize, String link) async {
+    setState(() {
+      Sheet sheetObject = excel[excel.sheets.keys.first];
+      sheetObject.appendRow([name, prize, link]);
+      for (var table in excel.tables.keys) {
+        print(table); //sheet Name
+        print(excel.tables[table]!.maxColumns);
+        print(excel.tables[table]!.maxRows);
+        for (var row in excel.tables[table]!.rows) {
+          print('$row');
+        }
+      }
+    });
   }
 
   String eventName = "", eventDate = "";
@@ -171,6 +185,15 @@ class _IssuerHomeState extends State<IssuerHome> {
             onPressed: captureCertificatePNG,
             label: const Text("Upload"),
             icon: const Icon(Icons.upload_file),
+          ),
+          const SizedBox(
+            width: 20,
+          ),
+          FloatingActionButton.extended(
+            heroTag: "c",
+            onPressed: downloadExcel,
+            label: const Text("Download Excel file"),
+            icon: const Icon(Icons.file_download_outlined),
           ),
           const SizedBox(
             width: 20,
