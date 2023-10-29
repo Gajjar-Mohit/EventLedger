@@ -11,6 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:web3dart/web3dart.dart';
+import 'package:flutter/src/painting/box_border.dart' as Border;
 
 class IssuerHome extends StatefulWidget {
   const IssuerHome({super.key});
@@ -101,27 +102,29 @@ class _IssuerHomeState extends State<IssuerHome> {
   void captureCertificatePNG() {
     ContractService contactService =
         Provider.of<ContractService>(context, listen: false);
-    screenshotController.capture().then((image) {
-      ipfsService.uploadImageWeb(image!).then((cid) {
-        contactService.generateCertificateFunction(cid).then((value) {
-          String link = "";
-          setState(() {
-            isLoading = false;
-            link = "https://ipfs.io/ipfs/$cid";
+    if (_nameFieldContoller.text.isNotEmpty && _prizeFieldContoller.text.isNotEmpty) {
+      screenshotController.capture().then((image) {
+        ipfsService.uploadImageWeb(image!).then((cid) {
+          contactService.generateCertificateFunction(cid).then((value) {
+            String link = "";
+            setState(() {
+              isLoading = false;
+              link = "https://ipfs.io/ipfs/$cid";
+            });
+            writeData(name, prize, link);
+            Fluttertoast.showToast(msg: "Certificate Uploaded");
+            prize = "Enter the prize ";
+            name = "Enter the name";
+            _prizeFieldContoller.clear();
+            _nameFieldContoller.clear();
           });
-          writeData(name, prize, link);
-          Fluttertoast.showToast(msg: "Certificate Uploaded");
-          prize = "Enter the prize ";
-          name = "Enter the name";
-          _prizeFieldContoller.clear();
-          _nameFieldContoller.clear();
         });
+      }).catchError((onError) {
+        print(onError);
       });
-    }).catchError((onError) {
-      print(onError);
-
-      // Fluttertoast.showToast(msg: onError);
-    });
+    } else {
+      Fluttertoast.showToast(msg: "Please enter the name and prize");
+    }
   }
 
   @override
@@ -151,6 +154,8 @@ class _IssuerHomeState extends State<IssuerHome> {
     });
   }
 
+  bool changeTheme = false;
+
   String eventName = "", eventDate = "";
   void getEventDetails() async {
     ContractService contactService =
@@ -172,6 +177,284 @@ class _IssuerHomeState extends State<IssuerHome> {
   }
 
   ScreenshotController screenshotController = ScreenshotController();
+  Widget theme2() {
+    return Screenshot(
+      controller: screenshotController,
+      child: Container(
+          width: MediaQuery.of(context).size.width,
+          margin: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: const Color.fromARGB(255, 231, 234, 239)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const Text(
+                    "Certificate",
+                    style: TextStyle(
+                        fontSize: 90, height: 1, fontWeight: FontWeight.bold),
+                  ),
+                  const Text(
+                    "of Appreciation",
+                    style: TextStyle(
+                        fontSize: 50, height: 1, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const Text(
+                    "This certificate is awareded to",
+                    style: TextStyle(
+                        fontSize: 20, height: 1, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  InkWell(
+                    onTap: () {
+                      enterNameDialog(context);
+                    },
+                    child: Text(
+                      name,
+                      style: const TextStyle(
+                          fontSize: 50, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: RichText(
+                      textAlign: TextAlign.end,
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text:
+                                'In recognition of their dedication and contribution to the event, we hereby present this certificate as a token of appreciation on ',
+                            style: TextStyle(),
+                          ),
+                          TextSpan(
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                enterPrizeDialog(context);
+                              },
+                            text: prize,
+                            style: const TextStyle(
+                              color: Color(0xFF4B39EF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const TextSpan(
+                            text: 'in ',
+                            style: TextStyle(),
+                          ),
+                          TextSpan(
+                            text: "$eventName ",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: 'held on $eventDate.',
+                            style: const TextStyle(),
+                          ),
+                        ],
+                        style: const TextStyle(
+                          color: Color(0xFF57636C),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 70,
+                  ),
+                  Row(
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text("Certificate is Verified by"),
+                          Text(
+                            "EventLedger",
+                            style: TextStyle(
+                                fontSize: 30, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Image.asset(
+                        'assets/verified.png',
+                        height: 100,
+                      )
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(
+                width: 40,
+              ),
+              Container(
+                margin: const EdgeInsets.all(10),
+                width: MediaQuery.of(context).size.width / 4,
+                height: MediaQuery.of(context).size.height,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    image: const DecorationImage(
+                        fit: BoxFit.fitHeight,
+                        image: AssetImage("assets/image.jpeg"))),
+              )
+            ],
+          )),
+    );
+  }
+
+  Widget theme1() {
+    return Screenshot(
+        controller: screenshotController,
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.Border.all(
+              color: Colors.blueAccent,
+              width: 6,
+            ),
+          ),
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border.Border.all(
+                color: Colors.redAccent,
+                width: 6,
+              ),
+            ),
+            child: Column(
+              children: [
+                SizedBox(
+                    height: 150, child: Image.asset('assets/charusatlogo.png')),
+                const SizedBox(
+                  height: 100,
+                ),
+                Center(
+                  child: Text(
+                    "CERTIFICATE",
+                    style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[300]),
+                  ),
+                ),
+                const SizedBox(
+                  height: 30,
+                ),
+                const Center(
+                  child: Text(
+                    "This Certificate is Awarded to",
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    enterNameDialog(context);
+                  },
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                        fontSize: 50, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(
+                          text:
+                              'In recognition of their dedication and contribution to the event, we hereby present this certificate as a token of appreciation on ',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        TextSpan(
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              enterPrizeDialog(context);
+                            },
+                          text: prize,
+                          style: const TextStyle(
+                            color: Color(0xFF4B39EF),
+                            fontSize: 30,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: 'in ',
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        TextSpan(
+                          text: "$eventName ",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: 'held on $eventDate.',
+                          style: const TextStyle(fontSize: 30),
+                        ),
+                      ],
+                      style: const TextStyle(
+                        color: Color(0xFF57636C),
+                        fontSize: 30,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 70,
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text("Certificate is Verified by"),
+                        Text(
+                          "EventLedger",
+                          style: TextStyle(
+                              fontSize: 30, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Image.asset(
+                      'assets/verified.png',
+                      height: 100,
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
+        ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +482,19 @@ class _IssuerHomeState extends State<IssuerHome> {
             width: 20,
           ),
           FloatingActionButton.extended(
+            heroTag: "d",
+            onPressed: () {
+              setState(() {
+                changeTheme = !changeTheme;
+              });
+            },
+            label: const Text("Change Template"),
+            icon: const Icon(Icons.change_circle_outlined),
+          ),
+          const SizedBox(
+            width: 20,
+          ),
+          FloatingActionButton.extended(
             heroTag: "a",
             onPressed: logout,
             label: const Text("Logout"),
@@ -210,151 +506,9 @@ class _IssuerHomeState extends State<IssuerHome> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Screenshot(
-              controller: screenshotController,
-              child: Container(
-                  width: 1920,
-                  margin: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      color: const Color.fromARGB(255, 231, 234, 239)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Text(
-                            "Certificate",
-                            style: TextStyle(
-                                fontSize: 90,
-                                height: 1,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            "of Appreciation",
-                            style: TextStyle(
-                                fontSize: 50,
-                                height: 1,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          const Text(
-                            "This certificate is awareded to",
-                            style: TextStyle(
-                                fontSize: 20,
-                                height: 1,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          InkWell(
-                            onTap: () {
-                              enterNameDialog(context);
-                            },
-                            child: Text(
-                              name,
-                              style: const TextStyle(
-                                  fontSize: 50, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width / 2,
-                            child: RichText(
-                              textAlign: TextAlign.end,
-                              text: TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text:
-                                        'In recognition of their dedication and contribution to the event, we hereby present this certificate as a token of appreciation on ',
-                                    style: TextStyle(),
-                                  ),
-                                  TextSpan(
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
-                                        enterPrizeDialog(context);
-                                      },
-                                    text: prize,
-                                    style: const TextStyle(
-                                      color: Color(0xFF4B39EF),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const TextSpan(
-                                    text: 'in ',
-                                    style: TextStyle(),
-                                  ),
-                                  TextSpan(
-                                    text: "$eventName ",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(
-                                    text: 'held on $eventDate.',
-                                    style: const TextStyle(),
-                                  ),
-                                ],
-                                style: const TextStyle(
-                                  color: Color(0xFF57636C),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 70,
-                          ),
-                          Row(
-                            children: [
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text("Certificate is Verified by"),
-                                  Text(
-                                    "EventLedger",
-                                    style: TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Image.asset(
-                                'assets/verified.png',
-                                height: 100,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                      const SizedBox(
-                        width: 40,
-                      ),
-                      Container(
-                        margin: const EdgeInsets.all(10),
-                        width: MediaQuery.of(context).size.width / 4,
-                        height: MediaQuery.of(context).size.height,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            image: const DecorationImage(
-                                fit: BoxFit.fitHeight,
-                                image: AssetImage("assets/image.jpeg"))),
-                      )
-                    ],
-                  )),
-            ),
+          : changeTheme
+              ? theme1()
+              : theme2(),
     );
   }
 }
