@@ -50,6 +50,10 @@ class ContractService extends ChangeNotifier {
 
     _contractAddress =
         EthereumAddress.fromHex(jsonAbi['networks']['80001']['address']);
+    // _contractAddress =
+    //     EthereumAddress.fromHex(jsonAbi['networks']['1337']['address']);
+
+
     print("Got the abi");
     notifyListeners();
   }
@@ -88,7 +92,6 @@ class ContractService extends ChangeNotifier {
             function: registerEvent!,
             parameters: [eventName, eventDate, add]),
         chainId: chainId);
-
     print("Event generated");
     notifyListeners();
   }

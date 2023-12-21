@@ -1,5 +1,6 @@
 import 'package:client/pages/issuer/home.dart';
 import 'package:client/pages/issuer/onboarding.dart';
+import 'package:client/pages/validator/home.dart';
 import 'package:client/providers/wallet_provider.dart';
 import 'package:client/services/contract_service.dart';
 import 'package:flutter/material.dart';
@@ -56,5 +57,22 @@ class _MyAppState extends State<MyApp> {
           ),
           home: isLoggedIn ? const IssuerHome() : const Onboarding()),
     );
+  }
+}
+
+class Validator extends StatelessWidget {
+  const Validator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Event Ledger',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const ValidatorHome(),);
   }
 }

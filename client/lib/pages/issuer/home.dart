@@ -1,5 +1,8 @@
+// ignore_for_file: library_prefixes
+
 import 'dart:async';
 import 'package:client/pages/issuer/onboarding.dart';
+import 'package:client/services/api_service.dart';
 import 'package:client/services/contract_service.dart';
 import 'package:client/services/ipfs_service.dart';
 import 'package:client/services/wallet_service.dart';
@@ -11,6 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:web3dart/web3dart.dart';
+// ignore: implementation_imports
 import 'package:flutter/src/painting/box_border.dart' as Border;
 
 class IssuerHome extends StatefulWidget {
@@ -21,6 +25,7 @@ class IssuerHome extends StatefulWidget {
 }
 
 class _IssuerHomeState extends State<IssuerHome> {
+  ApiService apiService = ApiService();
   WalletService walletService = WalletService();
   bool isLoading = false;
   void logout() {
@@ -30,25 +35,57 @@ class _IssuerHomeState extends State<IssuerHome> {
 
   String name = "Enter the name";
   String prize = "Enter the prize ";
+  String email = "Enter the email";
   final TextEditingController _nameFieldContoller = TextEditingController();
   final TextEditingController _prizeFieldContoller = TextEditingController();
+  final TextEditingController _emailFieldContoller = TextEditingController();
   enterNameDialog(BuildContext context) {
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Enter the name'),
-            content: TextField(
-              onChanged: (value) {},
-              onSubmitted: (value) {
-                print(value);
-                setState(() {
-                  name = value;
-                  Navigator.pop(context);
-                });
-              },
-              controller: _nameFieldContoller,
-              decoration: const InputDecoration(hintText: "David Bombal"),
+            title: const Text('Enter the details'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  onChanged: (value) {},
+                  onSubmitted: (value) {
+                    print(value);
+                    setState(() {
+                      name = value;
+                      Navigator.pop(context);
+                    });
+                  },
+                  controller: _nameFieldContoller,
+                  decoration: const InputDecoration(hintText: "David Bombal"),
+                ),
+                TextField(
+                  onChanged: (value) {},
+                  onSubmitted: (value) {
+                    print(value);
+                    setState(() {
+                      prize = value;
+                      Navigator.pop(context);
+                    });
+                  },
+                  controller: _prizeFieldContoller,
+                  decoration: const InputDecoration(hintText: "Attending"),
+                ),
+                TextField(
+                  onChanged: (value) {},
+                  onSubmitted: (value) {
+                    print(value);
+                    setState(() {
+                      email = value;
+                      Navigator.pop(context);
+                    });
+                  },
+                  controller: _emailFieldContoller,
+                  decoration:
+                      const InputDecoration(hintText: "example@gmail.com"),
+                ),
+              ],
             ),
             actions: <Widget>[
               OutlinedButton(
@@ -56,6 +93,8 @@ class _IssuerHomeState extends State<IssuerHome> {
                 onPressed: () {
                   setState(() {
                     name = _nameFieldContoller.text;
+                    prize = _prizeFieldContoller.text;
+                    email = _emailFieldContoller.text;
                     Navigator.pop(context);
                   });
                 },
@@ -102,7 +141,8 @@ class _IssuerHomeState extends State<IssuerHome> {
   void captureCertificatePNG() {
     ContractService contactService =
         Provider.of<ContractService>(context, listen: false);
-    if (_nameFieldContoller.text.isNotEmpty && _prizeFieldContoller.text.isNotEmpty) {
+    if (_nameFieldContoller.text.isNotEmpty &&
+        _prizeFieldContoller.text.isNotEmpty) {
       screenshotController.capture().then((image) {
         ipfsService.uploadImageWeb(image!).then((cid) {
           contactService.generateCertificateFunction(cid).then((value) {
@@ -111,10 +151,12 @@ class _IssuerHomeState extends State<IssuerHome> {
               isLoading = false;
               link = "https://ipfs.io/ipfs/$cid";
             });
-            writeData(name, prize, link);
+            writeData(name, prize, link, email);
+            apiService.sendEmail(email, link, name);
             Fluttertoast.showToast(msg: "Certificate Uploaded");
             prize = "Enter the prize ";
             name = "Enter the name";
+
             _prizeFieldContoller.clear();
             _nameFieldContoller.clear();
           });
@@ -139,10 +181,10 @@ class _IssuerHomeState extends State<IssuerHome> {
     excel.save();
   }
 
-  void writeData(String name, String prize, String link) async {
+  void writeData(String name, String prize, String link, String email_) async {
     setState(() {
       Sheet sheetObject = excel[excel.sheets.keys.first];
-      sheetObject.appendRow([name, prize, link]);
+      sheetObject.appendRow([name, prize, link, email_]);
       for (var table in excel.tables.keys) {
         print(table); //sheet Name
         print(excel.tables[table]!.maxColumns);
@@ -512,3 +554,6 @@ class _IssuerHomeState extends State<IssuerHome> {
     );
   }
 }
+
+
+// eth.sendTransaction({from: eth.coinbase, to:"0x86fDC5685b533923e5E7Cd4F7154D692A5643677", value:web3.toWei(5000, "ether")});
